@@ -1,0 +1,40 @@
+# Pipeline configuration for the Data Quality & Reconciliation demo.
+#
+# "sales_system" and "finance_system" simulate two systems that should
+# agree on the same set of orders (a common BI scenario: the sales
+# team's order export vs. the finance team's posted-transactions
+# export). The reconciliation section checks that they actually do.
+
+sources:
+  sales_system:
+    path: sample_data/sales_export.csv
+    key: order_id
+  finance_system:
+    path: sample_data/finance_export.csv
+    key: order_id
+
+reconciliation:
+  primary_source: sales_system
+  secondary_source: finance_system
+  compare_columns:
+    - amount
+  tolerance: 0.01
+
+validation_rules:
+  sales_system:
+    required_columns: [order_id, customer_id, order_date, amount, region]
+    not_null: [order_id, customer_id, amount]
+    unique: [order_id]
+    numeric_range:
+      amount:
+        min: 0
+        max: 100000
+
+  finance_system:
+    required_columns: [order_id, amount, posted_date, status]
+    not_null: [order_id, amount]
+    unique: [order_id]
+    numeric_range:
+      amount:
+        min: 0
+        max: 100000
